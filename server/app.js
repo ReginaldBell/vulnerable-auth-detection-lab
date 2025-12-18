@@ -5,20 +5,13 @@ const crypto = require("crypto");
 const authRoutes = require("./routes/auth");
 const internalRoutes = require("./routes/internal");
 
-
 const app = express();
 
-// Global error handlers
-process.on("uncaughtException", (err) => {
-  console.error("uncaughtException:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.error("unhandledRejection:", err);
-});
+const VULN_MODE = process.env.VULN_MODE === "true";
 
 app.use(express.json());
 
+// Sessions (keep baseline contract)
 app.use(
   session({
     secret: "dev-secret-change-me",
@@ -35,7 +28,6 @@ app.use((req, res, next) => {
   const request_id = crypto.randomUUID();
   req.request_id = request_id;
 
-  // Route handlers can set these fields for SOC-style telemetry
   req.telemetry = {
     event_type: null,
     result: null,
@@ -62,9 +54,14 @@ app.use((req, res, next) => {
       reason: req.telemetry.reason,
 
       user_id: (req.session && req.session.user_id) || null,
-      session_id: req.sessionID || null
+      session_id: req.sessionID || null,
+
+      vuln_mode: VULN_MODE,
+      user_agent: req.headers["user-agent"] || null
     };
 
+    const fs = require('fs');
+    fs.appendFileSync('telemetry.log', JSON.stringify(event) + '\n');
     console.log(JSON.stringify(event));
   });
 
@@ -81,10 +78,5 @@ app.get("/health", (req, res) => {
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`server listening on http://localhost:${PORT}`);
-});
-
-// Express error middleware
-app.use((err, req, res, next) => {
-  console.error("express_error:", err);
-  res.status(500).json({ ok: false, error: "internal error" });
+  console.log(`VULN_MODE=${VULN_MODE}`);
 });
