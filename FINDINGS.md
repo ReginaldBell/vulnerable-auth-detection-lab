@@ -1,29 +1,23 @@
-# Security Findings — Phase 3
+Security Findings — Phase 3
 
-> **Scope:** Document intentionally introduced vulnerabilities using observed application behavior and telemetry evidence.  
-> **Method:** Evidence-based analysis using structured JSON telemetry with no code review or dynamic scanning.
+Scope: Document intentionally introduced vulnerabilities using observed application behavior and telemetry evidence.
+Method: Evidence-based analysis using structured JSON telemetry with no code review or dynamic scanning.
 
----
-
-## Executive Summary
+Executive Summary
 
 Three authentication and authorization vulnerabilities were identified through telemetry analysis:
 
-| ID | Vulnerability | Severity | MITRE ATT&CK |
-|---|---|---|---|
-| **F-01** | User Enumeration via Login Response | Medium | T1087 |
-| **F-02** | Unrestricted Brute Force Attempts | High | T1110 |
-| **F-03** | Authorization Bypass on Internal Endpoint | Critical | T1190 |
+ID | Vulnerability | Severity | MITRE ATT&CK
+F-01 | User Enumeration via Login Response | Medium | T1087
+F-02 | Unrestricted Brute Force Attempts | High | T1110
+F-03 | Authorization Bypass on Internal Endpoint | Critical | T1190
 
-All findings are validated with `request_id` anchors from production telemetry logs.
+All findings are validated with request_id anchors from production telemetry logs.
 
----
-
-## Telemetry Schema Reference
+Telemetry Schema Reference
 
 Evidence is derived from the following structured log fields:
 
-```json
 {
   "timestamp": "ISO 8601 timestamp",
   "request_id": "unique request identifier",
@@ -39,20 +33,16 @@ Evidence is derived from the following structured log fields:
   "vuln_mode": "boolean flag",
   "user_agent": "client user agent"
 }
-```
 
----
-
-## F-01: User Enumeration via Login Response
-
-### Description
+F-01: User Enumeration via Login Response
+Description
 
 The authentication endpoint leaks account existence information through differential error messages. Attackers can systematically enumerate valid usernames before attempting password attacks.
 
-### Evidence
+Evidence
 
-**Non-existent User:**
-```json
+Non-existent User:
+
 {
   "timestamp": "2025-12-18T21:29:51.125Z",
   "request_id": "97ea580a-807b-405f-962f-322a1257208e",
@@ -61,10 +51,10 @@ The authentication endpoint leaks account existence information through differen
   "result": "failure",
   "reason": "no_such_user"
 }
-```
 
-**Valid User, Invalid Password:**
-```json
+
+Valid User, Invalid Password:
+
 {
   "timestamp": "2025-12-18T21:39:33.886Z",
   "request_id": "597a2a0d-6be2-4bcb-b8b0-447f61b52ad8",
@@ -73,81 +63,50 @@ The authentication endpoint leaks account existence information through differen
   "result": "failure",
   "reason": "bad_password"
 }
-```
 
-### Impact
+Impact
 
-- **Attack Path:** Enables reconnaissance phase of credential attacks
-- **Risk:** Reduces brute-force complexity by confirming valid targets
-- **Scale:** Automated tools can enumerate entire username spaces
+Attack Path: Enables reconnaissance phase of credential attacks
 
-### Detection Indicators
+Risk: Reduces brute-force complexity by confirming valid targets
 
-```
-event_type = "login_attempt" 
-AND result = "failure"
-AND reason IN ("no_such_user", "bad_password")
-```
+Scale: Automated tools can enumerate entire username spaces
 
-**Alert Logic:**
-- Multiple `no_such_user` failures across varied usernames from single IP
-- Transition from enumeration pattern to targeted `bad_password` attempts
-- Correlation with subsequent brute-force activity (F-02)
-
----
-
-## F-02: Unrestricted Brute Force Attempts
-
-### Description
+F-02: Unrestricted Brute Force Attempts
+Description
 
 The login endpoint accepts unlimited authentication attempts without rate limiting, account lockout, or progressive delays. This enables high-velocity credential attacks.
 
-### Evidence
+Evidence
 
-**Burst Pattern (86ms window):**
+Burst Pattern (86ms window):
 
-```
 2025-12-18T21:29:51.125Z | 97ea580a-807b-405f-962f-322a1257208e | 401 | no_such_user
 2025-12-18T21:29:51.136Z | a46bc700-b57e-4222-8f50-9e884a6bc4dc | 401 | no_such_user
 2025-12-18T21:29:51.147Z | 99ccfbb1-acf0-40a5-be55-f07ef46eafd1 | 401 | no_such_user
 2025-12-18T21:29:51.157Z | b36ba87d-0f76-460e-9fca-b9318d0b2833 | 401 | no_such_user
 2025-12-18T21:29:51.211Z | d32b403d-5265-42f8-92be-fbed26ab7d95 | 401 | no_such_user
-... [additional requests omitted for brevity]
-```
 
-**Attack Velocity:** ~10-12 attempts per second with consistent server response behavior.
 
-### Impact
+Attack Velocity: High-velocity burst (5 attempts in ~86ms, equivalent to ~58 req/sec).
 
-- **Attack Path:** Enables password guessing at scale
-- **Risk:** Combined with F-01, supports targeted brute-force against known accounts
-- **Scale:** No defensive throttling observed over sustained attack period
+Impact
 
-### Detection Indicators
+Attack Path: Enables password guessing at scale
 
-```
-COUNT(login_attempt WHERE result = "failure" AND ip = $attacker_ip) > threshold
-WITHIN time_window
-```
+Risk: Combined with F-01, supports targeted brute-force against known accounts
 
-**Alert Logic:**
-- ≥10 login failures from single IP within 60 seconds
-- ≥50 login failures from single IP within 5 minutes
-- Any success event following high-volume failure pattern
-- Distributed attacks from multiple IPs targeting same username
+Scale: No defensive throttling observed over sustained attack period
 
----
+F-03: Authorization Bypass on Internal Endpoint
+Description
 
-## F-03: Authorization Bypass on Internal Endpoint
+The /internal/reports endpoint returns sensitive data without requiring authenticated session validation. Access control is bypassed when vuln_mode=true, allowing unauthenticated access to internal resources.
 
-### Description
+Evidence
 
-The `/internal/reports` endpoint returns sensitive data without requiring authenticated session validation. Access control is bypassed when `vuln_mode=true`, allowing unauthenticated access to internal resources.
+Unauthorized Access Granted:
 
-### Evidence
-
-**Unauthorized Access Granted:**
-```json
 {
   "timestamp": "2025-12-18T21:30:35.446Z",
   "request_id": "9e94150c-5595-4ed3-9eb3-282b9b8d7409",
@@ -160,10 +119,10 @@ The `/internal/reports` endpoint returns sensitive data without requiring authen
   "user_id": null,
   "vuln_mode": true
 }
-```
 
-**Control Comparison (Proper Gate):**
-```json
+
+Control Comparison (Proper Gate):
+
 {
   "timestamp": "2025-12-18T21:30:46.303Z",
   "request_id": "a0bfb082-c904-4c51-b304-79f2b51930f1",
@@ -175,69 +134,34 @@ The `/internal/reports` endpoint returns sensitive data without requiring authen
   "reason": "no_session",
   "user_id": null
 }
-```
 
-### Impact
+Impact
 
-- **Attack Path:** Direct unauthorized access to internal functionality
-- **Risk:** Information disclosure, privilege escalation, lateral movement
-- **Scale:** Complete authentication bypass on specific internal route
+Attack Path: Direct unauthorized access to internal functionality
 
-### Detection Indicators
+Risk: Information disclosure
 
-```
-path = "/internal/reports"
-AND status = 200
-AND user_id IS NULL
-```
+Scale: Complete authentication bypass on specific internal route
 
-**Alert Logic:**
-- Any internal endpoint success without authenticated `user_id`
-- `reason = "vuln_authz_bypass"` in telemetry
-- Access to `/internal/*` paths without corresponding session validation events
+Combined Attack Chain
 
----
+Enumeration (F-01)
 
-## Combined Attack Chain
+Brute Force (F-02)
 
-These vulnerabilities enable a realistic multi-stage attack:
+Authorization Bypass (F-03)
 
-```
-1. Enumeration (F-01)
-   └─> Identify valid usernames via differential responses
-   
-2. Brute Force (F-02)
-   └─> Attempt password guessing against confirmed accounts
-   
-3. Authorization Bypass (F-03)
-   └─> Access internal resources without authentication
-```
+Remediation Roadmap
+Phase 4 Scope (Immediate)
 
-**Timeline Evidence:**
-- `21:29:51` - Enumeration begins (F-01)
-- `21:29:51` - Brute force burst (F-02)
-- `21:30:35` - Internal access exploited (F-03)
+Normalize all login error responses to generic "Invalid credentials" message
 
----
+Implement mandatory session validation on all /internal/* routes
 
-## Remediation Roadmap
+Add telemetry tests to validate control effectiveness
 
-**Phase 4 Scope** (Immediate):
-1. Normalize all login error responses to generic "Invalid credentials" message
-2. Implement mandatory session validation on all `/internal/*` routes
-3. Add telemetry tests to validate control effectiveness
+Phase 3 Completion Criteria
 
-**Phase 6 Scope** (Hardening):
-1. Rate limiting (exponential backoff after N failures)
-2. Account lockout policy (temporary lock after M failed attempts)
-3. CAPTCHA implementation for high-risk authentication events
-4. Multi-factor authentication (MFA) requirement for internal routes
-
----
-
-## Phase 3 Completion Criteria
-
-Phase 3 is complete when:
-1. ✅ Each vulnerability has telemetry-backed evidence with `request_id` anchors
-2. ✅ MITRE mapping tied to observed behaviors (see MITRE-MAPPING.md)
-3. ✅ Incident timeline documented with evidence references (see INCIDENT-REPORT.md)
+✅ Each vulnerability has telemetry-backed evidence with request_id anchors
+✅ MITRE mapping tied to observed behaviors
+✅ Incident timeline documented with evidence references
