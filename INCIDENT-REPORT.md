@@ -24,7 +24,7 @@ Telemetry analysis reveals a multi-stage attack pattern exploiting three distinc
 2. **Brute Force** — Unlimited authentication attempts facilitated credential attacks
 3. **Authorization Bypass** — Internal endpoint accessible without authentication
 
-The attack sequence demonstrates realistic adversary behavior: reconnaissance → credential access → privilege escalation. All activity is validated with structured telemetry evidence (`request_id` anchors).
+The attack sequence demonstrates realistic adversary behavior: reconnaissance → credential access → unauthorized access. All activity is validated with structured telemetry evidence (`request_id` anchors).
 
 **Impact:** Successful unauthorized access to internal resources without valid credentials.
 
@@ -84,7 +84,7 @@ Time (UTC)              | Request ID (partial)      | Status | Reason
 **Metrics:**
 - **Duration:** 86ms window
 - **Attempts:** 5+ failed login requests
-- **Velocity:** ~10-12 requests/second
+- **Velocity:** ~58 req/sec equivalent
 - **Response:** Consistent 401 status with no rate limiting
 
 **Observation:** Unrestricted authentication attempts enable automated password guessing at scale.
@@ -117,7 +117,7 @@ Time (UTC)              | Request ID (partial)      | Status | Reason
 }
 ```
 
-**Observation:** Attack persists over extended period with no defensive response (lockout, throttling, CAPTCHA).
+**Observation:** Attack persists over extended period with no defensive response.
 
 ---
 
@@ -224,7 +224,6 @@ Time (UTC)              | Request ID (partial)      | Status | Reason
 
 **Evidence:**
 - 5+ attempts within 86ms window
-- Sustained 10-12 req/sec velocity
 - No observable throttling behavior
 - Consistent 401 responses across all attempts
 
@@ -256,7 +255,6 @@ Time (UTC)              | Request ID (partial)      | Status | Reason
 1. Attacker probes internal routes (/internal/*)
 2. Attacker discovers /internal/reports bypasses authentication
 3. Attacker accesses sensitive internal data without credentials
-4. Attacker potentially escalates to other internal resources
 ```
 
 **MITRE Mapping:** T1190 Exploit Public-Facing Application
@@ -311,7 +309,6 @@ Time (UTC)              | Request ID (partial)      | Status | Reason
 
 | Indicator | Value | Context |
 |-----------|-------|---------|
-| **Login failure rate** | 10-12 req/sec | Single source IP |
 | **Enumeration signal** | `no_such_user` vs `bad_password` | Differential responses |
 | **Unauthorized access** | `200 OK` with `user_id=null` | Internal endpoint |
 | **Bypass flag** | `reason="vuln_authz_bypass"` | Explicit vulnerability marker |
@@ -369,28 +366,6 @@ Evidence: Attempt access without session, verify blocking
 ```
 
 ---
-
-### Phase 6: Security Hardening (Recommended)
-
-**Rate Limiting**
-- Implement exponential backoff after failed login attempts
-- Limit authentication endpoint to 5 req/min per IP
-
-**Account Lockout**
-- Lock account after 5 consecutive failures
-- Require password reset or time-based unlock
-
-**CAPTCHA Integration**
-- Trigger CAPTCHA after 3 failed attempts
-- Prevent automated brute-force tools
-
-**Multi-Factor Authentication**
-- Require MFA for internal resource access
-- Implement time-based one-time passwords (TOTP)
-
-**Enhanced Logging**
-- Log username attempts (hashed) for forensic analysis
-- Alert on distributed brute-force patterns
 
 ---
 
