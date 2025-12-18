@@ -1,153 +1,102 @@
-# Security Findings — Phase 3
+# MITRE ATT&CK Mapping — Phase 3
 
-> **Scope:** Document intentionally introduced vulnerabilities using observed application behavior and telemetry evidence.  
-> **Method:** Evidence-based analysis using structured JSON telemetry with no code review or dynamic scanning.
-
----
-
-## Executive Summary
-
-Three authentication and authorization vulnerabilities were identified through telemetry analysis:
-
-| ID | Vulnerability | Severity | MITRE ATT&CK |
-|---|---|---|---|
-| **F-01** | User Enumeration via Login Response | Medium | T1087 |
-| **F-02** | Unrestricted Brute Force Attempts | High | T1110 |
-| **F-03** | Authorization Bypass on Internal Endpoint | Critical | T1190 |
-
-All findings are validated with `request_id` anchors from production telemetry logs.
+> **Purpose:** Map observed authentication vulnerabilities to MITRE ATT&CK framework techniques.  
+> **Method:** Evidence-based correlation using telemetry data from production logs.
 
 ---
 
-## Telemetry Schema Reference
+## Quick Reference Table
 
-Evidence is derived from the following structured log fields:
+| Finding | MITRE Technique | Tactic | Evidence Anchor |
+|---------|----------------|--------|-----------------|
+| F-01: User Enumeration | **T1087** Account Discovery | Discovery | `97ea580a...` / `597a2a0d...` |
+| F-02: Brute Force | **T1110** Brute Force | Credential Access | `97ea580a...` (burst pattern) |
+| F-03: Authorization Bypass | **T1190** Exploit Public-Facing App | Initial Access | `9e94150c...` |
+
+---
+
+## Detailed Technique Analysis
+
+### T1087 — Account Discovery
+
+**Observed Behavior:**  
+Login endpoint returns different error reasons based on account existence, enabling systematic username enumeration.
+
+**Telemetry Evidence:**
 
 ```json
-{
-  "timestamp": "ISO 8601 timestamp",
-  "request_id": "unique request identifier",
-  "ip": "client IP address",
-  "method": "HTTP method",
-  "path": "request path",
-  "status": "HTTP status code",
-  "event_type": "categorized event",
-  "result": "success | failure",
-  "reason": "detailed result reason",
-  "user_id": "authenticated user ID or null",
-  "session_id": "session identifier",
-  "vuln_mode": "boolean flag",
-  "user_agent": "client user agent"
-}
-```
-
----
-
-## F-01: User Enumeration via Login Response
-
-### Description
-
-The authentication endpoint leaks account existence information through differential error messages. Attackers can systematically enumerate valid usernames before attempting password attacks.
-
-### Evidence
-
-**Non-existent User:**
-```json
+// Non-existent account
 {
   "timestamp": "2025-12-18T21:29:51.125Z",
   "request_id": "97ea580a-807b-405f-962f-322a1257208e",
   "path": "/login",
-  "status": 401,
   "result": "failure",
   "reason": "no_such_user"
 }
-```
 
-**Valid User, Invalid Password:**
-```json
+// Valid account, wrong password
 {
   "timestamp": "2025-12-18T21:39:33.886Z",
   "request_id": "597a2a0d-6be2-4bcb-b8b0-447f61b52ad8",
   "path": "/login",
-  "status": 401,
   "result": "failure",
   "reason": "bad_password"
 }
 ```
 
-### Impact
+**ATT&CK Context:**
+- **Tactic:** Discovery
+- **Sub-technique:** T1087.001 (Local Account)
+- **Description:** Adversaries enumerate accounts to identify valid targets for further attacks
+- **Detection:** Monitor for patterns of systematic login failures with varied usernames
 
-- **Attack Path:** Enables reconnaissance phase of credential attacks
-- **Risk:** Reduces brute-force complexity by confirming valid targets
-- **Scale:** Automated tools can enumerate entire username spaces
-
-### Detection Indicators
-
-```
-event_type = "login_attempt" 
-AND result = "failure"
-AND reason IN ("no_such_user", "bad_password")
-```
-
-**Alert Logic:**
-- Multiple `no_such_user` failures across varied usernames from single IP
-- Transition from enumeration pattern to targeted `bad_password` attempts
-- Correlation with subsequent brute-force activity (F-02)
+**Real-World Parallel:**  
+This behavior mirrors reconnaissance techniques used in credential stuffing and targeted phishing campaigns, where attackers first validate account existence before investing resources in password attacks.
 
 ---
 
-## F-02: Unrestricted Brute Force Attempts
+### T1110 — Brute Force
 
-### Description
+**Observed Behavior:**  
+Login endpoint processes unlimited authentication attempts without throttling, enabling high-velocity password guessing.
 
-The login endpoint accepts unlimited authentication attempts without rate limiting, account lockout, or progressive delays. This enables high-velocity credential attacks.
-
-### Evidence
-
-**Burst Pattern (86ms window):**
+**Telemetry Evidence:**
 
 ```
-2025-12-18T21:29:51.125Z | 97ea580a-807b-405f-962f-322a1257208e | 401 | no_such_user
-2025-12-18T21:29:51.136Z | a46bc700-b57e-4222-8f50-9e884a6bc4dc | 401 | no_such_user
-2025-12-18T21:29:51.147Z | 99ccfbb1-acf0-40a5-be55-f07ef46eafd1 | 401 | no_such_user
-2025-12-18T21:29:51.157Z | b36ba87d-0f76-460e-9fca-b9318d0b2833 | 401 | no_such_user
-2025-12-18T21:29:51.211Z | d32b403d-5265-42f8-92be-fbed26ab7d95 | 401 | no_such_user
-... [additional requests omitted for brevity]
+Timestamp               | Request ID (partial)      | Status | Reason
+-----------------------|---------------------------|--------|---------------
+2025-12-18T21:29:51.125| 97ea580a-807b-405f-962f  | 401    | no_such_user
+2025-12-18T21:29:51.136| a46bc700-b57e-4222-8f50  | 401    | no_such_user
+2025-12-18T21:29:51.147| 99ccfbb1-acf0-40a5-be55  | 401    | no_such_user
+2025-12-18T21:29:51.157| b36ba87d-0f76-460e-9fca  | 401    | no_such_user
+2025-12-18T21:29:51.211| d32b403d-5265-42f8-92be  | 401    | no_such_user
 ```
 
-**Attack Velocity:** High-velocity burst (5 attempts in ~86ms, equivalent to ~58 req/sec).
+**Attack Metrics:**
+- **Duration:** 86ms burst window with 5+ attempts
+- **Velocity:** ~58 req/sec equivalent
+- **Response:** Consistent 401 status with no progressive delays
 
-### Impact
+**ATT&CK Context:**
+- **Tactic:** Credential Access
+- **Sub-technique:** T1110.001 (Password Guessing), T1110.004 (Credential Stuffing)
+- **Description:** Adversaries use trial-and-error to guess valid credentials
+- **Detection:** Alert on high-frequency authentication failures from single source
 
-- **Attack Path:** Enables password guessing at scale
-- **Risk:** Combined with F-01, supports targeted brute-force against known accounts
-- **Scale:** No defensive throttling observed over sustained attack period
-
-### Detection Indicators
-
-```
-COUNT(login_attempt WHERE result = "failure" AND ip = $attacker_ip) > threshold
-WITHIN time_window
-```
-
-**Alert Logic:**
-- ≥10 login failures from single IP within 60 seconds
-- ≥50 login failures from single IP within 5 minutes
-- Any success event following high-volume failure pattern
-- Distributed attacks from multiple IPs targeting same username
+**Real-World Parallel:**  
+Unrestricted authentication attempts are exploited in botnet-driven credential stuffing attacks, where compromised credentials from data breaches are tested at scale across multiple services.
 
 ---
 
-## F-03: Authorization Bypass on Internal Endpoint
+### T1190 — Exploit Public-Facing Application
 
-### Description
+**Observed Behavior:**  
+Internal endpoint `/internal/reports` returns sensitive data without session validation when `vuln_mode=true`, bypassing authentication requirements.
 
-The `/internal/reports` endpoint returns sensitive data without requiring authenticated session validation. Access control is bypassed when `vuln_mode=true`, allowing unauthenticated access to internal resources.
+**Telemetry Evidence:**
 
-### Evidence
-
-**Unauthorized Access Granted:**
 ```json
+// Unauthorized access succeeds
 {
   "timestamp": "2025-12-18T21:30:35.446Z",
   "request_id": "9e94150c-5595-4ed3-9eb3-282b9b8d7409",
@@ -160,80 +109,147 @@ The `/internal/reports` endpoint returns sensitive data without requiring authen
   "user_id": null,
   "vuln_mode": true
 }
-```
 
-**Control Comparison (Proper Gate):**
-```json
+// Control: Proper authorization gate
 {
   "timestamp": "2025-12-18T21:30:46.303Z",
   "request_id": "a0bfb082-c904-4c51-b304-79f2b51930f1",
   "path": "/internal/dashboard",
-  "method": "GET",
   "status": 401,
-  "event_type": "internal_route_access",
-  "result": "failure",
   "reason": "no_session",
   "user_id": null
 }
 ```
 
-### Impact
+**ATT&CK Context:**
+- **Tactic:** Initial Access
+- **Description:** Adversaries exploit security flaws in public-facing applications to gain unauthorized access
+- **Detection:** Monitor for internal resource access without authenticated user context
 
-- **Attack Path:** Direct unauthorized access to internal functionality
-- **Risk:** Information disclosure
-- **Scale:** Complete authentication bypass on specific internal route
-
-### Detection Indicators
-
-```
-path = "/internal/reports"
-AND status = 200
-AND user_id IS NULL
-```
-
-**Alert Logic:**
-- Any internal endpoint success without authenticated `user_id`
-- `reason = "vuln_authz_bypass"` in telemetry
-- Access to `/internal/*` paths without corresponding session validation events
+**Real-World Parallel:**  
+Authorization bypass vulnerabilities enable direct access to administrative functions, internal APIs, and sensitive data—a common vector in web application breaches (e.g., OWASP A01:2021 Broken Access Control).
 
 ---
 
-## Combined Attack Chain
+## Attack Kill Chain Mapping
 
-These vulnerabilities enable a realistic multi-stage attack:
+These techniques form a coherent attack progression:
 
 ```
-1. Enumeration (F-01)
-   └─> Identify valid usernames via differential responses
-   
-2. Brute Force (F-02)
-   └─> Attempt password guessing against confirmed accounts
-   
-3. Authorization Bypass (F-03)
-   └─> Access internal resources without authentication
+┌─────────────────────────────────────────────────────────┐
+│                    ATTACK TIMELINE                      │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  [T1087] Account Discovery                             │
+│  └─> 21:29:51 - Enumerate valid usernames              │
+│      Evidence: no_such_user vs bad_password responses  │
+│                                                         │
+│           ↓                                             │
+│                                                         │
+│  [T1110] Brute Force                                    │
+│  └─> 21:29:51 - High-velocity password guessing        │
+│                                                         │
+│           ↓                                             │
+│                                                         │
+│  [T1190] Exploit Public-Facing Application             │
+│  └─> 21:30:35 - Authorization bypass on /internal/*    │
+│      Evidence: 200 OK with user_id=null                │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**Timeline Evidence:**
-- `21:29:51` - Enumeration begins (F-01)
-- `21:29:51` - Brute force burst (F-02)
-- `21:30:35` - Internal access exploited (F-03)
+**Multi-Stage Attack Scenario:**
+1. **Reconnaissance** - Attacker enumerates valid accounts using F-01
+2. **Credential Access** - Attacker brute-forces enumerated accounts using F-02
+3. **Initial Access** - Attacker exploits authorization bypass using F-03 to access internal resources
 
 ---
 
-## Remediation Roadmap
+## Detection & Response Recommendations
 
-**Phase 4 Scope** (Immediate):
-1. Normalize all login error responses to generic "Invalid credentials" message
-2. Implement mandatory session validation on all `/internal/*` routes
-3. Add telemetry tests to validate control effectiveness
+### T1087 Detection
+
+**Sigma Rule Concept:**
+```yaml
+title: User Enumeration via Login Response Differential
+logsource:
+  category: application
+  product: auth_service
+detection:
+  selection_enum:
+    event_type: login_attempt
+    result: failure
+    reason:
+      - no_such_user
+      - bad_password
+  condition: selection_enum
+  timeframe: 5m
+  threshold: 10
+```
+
+**Response Actions:**
+- Normalize error messages to generic "Invalid credentials"
+- Implement account enumeration protection
+
+---
+
+### T1110 Detection
+
+**Sigma Rule Concept:**
+```yaml
+title: Brute Force Authentication Attempt
+logsource:
+  category: application
+  product: auth_service
+detection:
+  selection_brute:
+    event_type: login_attempt
+    result: failure
+  condition: selection_brute | count(ip) by ip > 10
+  timeframe: 1m
+```
 
 
 
 ---
 
-## Phase 3 Completion Criteria
+### T1190 Detection
 
-Phase 3 is complete when:
-1. ✅ Each vulnerability has telemetry-backed evidence with `request_id` anchors
-2. ✅ MITRE mapping tied to observed behaviors (see MITRE-MAPPING.md)
-3. ✅ Incident timeline documented with evidence references (see INCIDENT-REPORT.md)
+**Sigma Rule Concept:**
+```yaml
+title: Authorization Bypass on Internal Endpoint
+logsource:
+  category: application
+  product: auth_service
+detection:
+  selection_bypass:
+    path: /internal/*
+    status: 200
+    user_id: null
+  condition: selection_bypass
+```
+
+**Response Actions:**
+- Enforce mandatory session validation on all internal routes
+- Remove vuln_mode bypass logic from production code
+
+---
+
+## Phase 4 Validation Criteria
+
+Before declaring Phase 4 complete, verify:
+
+- ✅ T1087: Enumeration signals eliminated (uniform error messages)
+- ✅ T1190: Authorization bypass patched (session validation enforced)
+
+Each control must be validated with telemetry evidence showing the attack technique no longer succeeds.
+
+---
+
+## References
+
+- **MITRE ATT&CK Framework:** [https://attack.mitre.org](https://attack.mitre.org)
+- **T1087 - Account Discovery:** [https://attack.mitre.org/techniques/T1087](https://attack.mitre.org/techniques/T1087)
+- **T1110 - Brute Force:** [https://attack.mitre.org/techniques/T1110](https://attack.mitre.org/techniques/T1110)
+- **T1190 - Exploit Public-Facing Application:** [https://attack.mitre.org/techniques/T1190](https://attack.mitre.org/techniques/T1190)
+- **Sigma Rules:** [https://github.com/SigmaHQ/sigma](https://github.com/SigmaHQ/sigma)
