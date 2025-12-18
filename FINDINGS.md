@@ -180,7 +180,7 @@ The `/internal/reports` endpoint returns sensitive data without requiring authen
 ### Impact
 
 - **Attack Path:** Direct unauthorized access to internal functionality
-- **Risk:** Information disclosure, privilege escalation, lateral movement
+- **Risk:** Information disclosure
 - **Scale:** Complete authentication bypass on specific internal route
 
 ### Detection Indicators
