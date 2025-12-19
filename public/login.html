@@ -2,48 +2,275 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login - SecureAuth Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth System - Login</title>
   <style>
-    body { font-family: sans-serif; margin: 2em; }
-    .msg { margin-top: 1em; color: #b00; }
-    .success { color: #080; }
-    form { display: flex; flex-direction: column; width: 220px; }
-    label { margin-top: 0.5em; }
-    button { margin-top: 1em; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #00ff00;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #00ff00;
+      border-radius: 8px;
+      padding: 40px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      text-shadow: 0 0 10px #00ff00;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #00cc00;
+      font-size: 0.9em;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .form-section {
+      background: rgba(0, 20, 0, 0.5);
+      border: 1px solid #00ff00;
+      border-radius: 4px;
+      padding: 30px;
+    }
+
+    .form-section h2 {
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      text-align: center;
+      text-shadow: 0 0 5px #00ff00;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      color: #00ff00;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      background: #000;
+      border: 1px solid #00ff00;
+      border-radius: 4px;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      font-size: 1em;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #00ff00;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      background: #00cc00;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.9em;
+      display: none;
+    }
+
+    .message.success {
+      background: rgba(0, 255, 0, 0.2);
+      border: 1px solid #00ff00;
+      color: #00ff00;
+    }
+
+    .message.error {
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <form id="loginForm">
-    <label for="username">Username</label>
-    <input type="text" id="username" name="username" required>
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required>
-    <button type="submit">Login</button>
-  </form>
-  <div id="message" class="msg"></div>
+  <div class="container">
+    <div class="header">
+      <h1>AUTH SYSTEM</h1>
+      <p>[ SECURE LOGIN TERMINAL ]</p>
+    </div>
+
+    <div class="main-content">
+      <div class="form-section">
+        <h2>[ LOGIN ]</h2>
+        <div class="form-group">
+          <label for="login-username">USERNAME</label>
+          <input type="text" id="login-username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">PASSWORD</label>
+          <input type="password" id="login-password" placeholder="Enter password">
+        </div>
+        <button class="btn" onclick="handleLogin()">LOGIN</button>
+        <div id="login-message" class="message"></div>
+      </div>
+
+      <div class="form-section">
+        <h2>[ SIGNUP ]</h2>
+        <div class="form-group">
+          <label for="signup-username">USERNAME</label>
+          <input type="text" id="signup-username" placeholder="Min 3 characters">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">PASSWORD</label>
+          <input type="password" id="signup-password" placeholder="Min 6 characters">
+        </div>
+        <button class="btn" onclick="handleSignup()">SIGNUP</button>
+        <div id="signup-message" class="message"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    document.getElementById('loginForm').onsubmit = async function(e) {
-      e.preventDefault();
-      const msg = document.getElementById('message');
-      msg.textContent = '';
-      msg.className = 'msg';
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: document.getElementById('username').value,
-          password: document.getElementById('password').value
-        })
-      });
-      if (res.ok) {
-        msg.textContent = 'Login successful';
-        msg.className = 'msg success';
-      } else {
-        const data = await res.json().catch(() => ({}));
-        msg.textContent = data.error || 'Login failed';
+    function showMessage(elementId, text, isSuccess) {
+      const el = document.getElementById(elementId);
+      el.textContent = text;
+      el.className = 'message ' + (isSuccess ? 'success' : 'error');
+      el.style.display = 'block';
+      setTimeout(() => {
+        el.style.display = 'none';
+      }, 3000);
+    }
+
+    async function handleSignup() {
+      const username = document.getElementById('signup-username').value;
+      const password = document.getElementById('signup-password').value;
+
+      let errorMsg = 'Signup failed';
+      let isSuccess = false;
+
+      try {
+        const response = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, password })
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        let data = {};
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          data.error = await response.text();
+        }
+
+        if (data.ok) {
+          showMessage('signup-message', 'Account created! Please login.', true);
+          document.getElementById('signup-username').value = '';
+          document.getElementById('signup-password').value = '';
+        } else {
+          showMessage('signup-message', data.error || errorMsg, false);
+        }
+      } catch (e) {
+        showMessage('signup-message', errorMsg, false);
       }
-    };
+    }
+
+    async function handleLogin() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+
+      let errorMsg = 'Login failed';
+      let isSuccess = false;
+
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, password })
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        let data = {};
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          data.error = await response.text();
+        }
+
+        if (data.ok) {
+          showMessage('login-message', 'Login successful! Redirecting...', true);
+          setTimeout(() => {
+            window.location.href = '/dashboard.html';
+          }, 1000);
+        } else {
+          showMessage('login-message', data.error || errorMsg, false);
+        }
+      } catch (e) {
+        showMessage('login-message', errorMsg, false);
+      }
+    }
+
+    document.getElementById('login-password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    document.getElementById('signup-password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSignup();
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+[2025-12-19T20:20:58.538Z] SecureAuth Scanner started
+TARGET=http://localhost:3000
+UA=SecureAuthScanner/1.0
+
+route_probe GET /health -> 200
+route_probe GET /internal/dashboard -> Error: timeout
+route_probe GET /internal/settings -> Error: timeout
+route_probe GET /internal/reports -> Error: timeout
+
+=== UNAUTH INTERNAL ACCESS TEST ===
+WARN: expected 401 but observed different result.
+
+=== AUTH FLOW TESTS ===
+signup -> Error: timeout (username=scanuser_1766175690585)
+login -> Error: timeout (username=scanuser_1766175690585)
+WARN: session cookie not observed.
+auth GET /internal/dashboard -> Error: timeout
+WARN: expected 200 for authenticated internal access but observed different result.
+
+=== USER ENUMERATION SIGNAL TEST ===
+enum_probe login(nonexistent user) -> Error: timeout
+
+=== RATE-LIMIT SIGNAL TEST (LIGHT) ===
+rate_probe attempt 1 -> Error: timeout
+rate_probe attempt 2 -> Error: timeout
+rate_probe attempt 3 -> Error: timeout
+rate_probe attempt 4 -> Error: timeout
+rate_probe attempt 5 -> Error: timeout
+rate_probe attempt 6 -> Error: timeout
+rate_probe attempt 7 -> Error: timeout
+rate_probe attempt 8 -> Error: timeout

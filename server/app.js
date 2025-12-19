@@ -112,12 +112,12 @@ app.get("/dashboard", (req, res) => {
 // - Account creation
 // - Credential verification
 // - Session establishment / teardown
-app.use("/auth", authRoutes);
+app.use("/auth", authRoutes({ VULN_MODE }));
 
 // Internal routes:
 // - Session-gated resources
 // - Authorization enforced upstream in router middleware
-app.use("/internal", internalRoutes);
+app.use("/internal", internalRoutes({ VULN_MODE }));
 
 // Health probe endpoint (no auth, no session dependency)
 app.get("/health", (req, res) => {
