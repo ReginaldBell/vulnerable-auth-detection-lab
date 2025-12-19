@@ -18,22 +18,10 @@
 console.log("INTERNAL ROUTES FILE LOADED");
 
 const express = require("express");
-const router = express.Router();
 
-// -------------------------------------------------------------------------------------
-// VULN_MODE flag
-// -------------------------------------------------------------------------------------
-// Reads from environment variable:
-//   VULN_MODE=true
-//
-// Purpose:
-// - Allows the app to behave differently when running vulnerable labs
-// - Useful for toggling insecure behaviors without changing code
-//
-// Example:
-//   VULN_MODE=true node server.js
-const VULN_MODE = process.env.VULN_MODE === "true";
-console.log("INTERNAL VULN_MODE =", VULN_MODE);
+module.exports = function({ VULN_MODE }) {
+  const router = express.Router();
+
 
 // =====================================================================================
 // GLOBAL GATEKEEPER FOR ALL /internal/* ROUTES
@@ -134,7 +122,6 @@ router.get("/reports", (req, res) =>
 );
 
 // -------------------------------------------------------------------------------------
-// Export router so it can be mounted like:
-//   app.use("/internal", internalRoutes)
-// -------------------------------------------------------------------------------------
-module.exports = router;
+// Export router factory
+  return router;
+};
