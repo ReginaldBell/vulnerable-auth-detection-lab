@@ -37,7 +37,8 @@ console.log("AUTH ROUTES FILE LOADED");
 const express = require("express");
 const bcrypt = require("bcrypt");
 
-const router = express.Router();
+module.exports = function({ VULN_MODE }) {
+  const router = express.Router();
 
 // -------------------------------------------------------------------------------------
 // In-memory user store (Phase 1)
@@ -169,17 +170,21 @@ router.post("/login", async (req, res) => {
       typeof (req.body && req.body.password) === "string" ? req.body.password : "";
 
     // Look up the user in the Map.
-    // If not found, we do NOT reveal whether the user exists.
-    // We just return "invalid credentials".
     const user = usersByUsername.get(username);
     if (!user) {
       req.telemetry.result = "failure";
-      req.telemetry.reason = "invalid_credentials";
-      return res.status(401).json({ ok: false, error: "invalid credentials" });
+      if (VULN_MODE) {
+        // Vulnerable: Reveal if user does not exist (user enumeration)
+        req.telemetry.reason = "user_not_found";
+        return res.status(401).json({ ok: false, error: "user does not exist" });
+      } else {
+        // Secure: Do not reveal if user exists
+        req.telemetry.reason = "invalid_credentials";
+        return res.status(401).json({ ok: false, error: "invalid credentials" });
+      }
     }
 
     // Compare incoming password against stored bcrypt hash.
-    // bcrypt.compare handles the hashing + safe comparison internally.
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) {
       req.telemetry.result = "failure";
@@ -188,7 +193,6 @@ router.post("/login", async (req, res) => {
     }
 
     // If credentials are valid:
-    // Store identity markers into the session so later requests can recognize the user.
     req.session.user_id = user.id;
     req.session.username = user.username;
 
@@ -240,6 +244,7 @@ router.post("/logout", (req, res) => {
   });
 });
 
-// Export router so the main app can mount it (ex: app.use(router) or app.use("/auth", router))
-module.exports = router;
+// Export router factory
+  return router;
+};
 
