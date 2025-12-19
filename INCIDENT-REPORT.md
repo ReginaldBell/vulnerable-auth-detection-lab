@@ -1,4 +1,4 @@
-# Security Incident Report — Phase 3
+# Security Incident Report 
 
 ---
 
