@@ -1,180 +1,217 @@
-🔐 Vulnerable Auth Detection Lab
+🔐 Vulnerable Authentication Detection Lab (SecureAuth)
 
-A detection-engineering project demonstrating how authentication vulnerabilities generate real SOC telemetry — and how detections and defensive controls are validated against live attack simulations.
+A detection-engineering and SOC simulation lab demonstrating how authentication weaknesses generate real security telemetry — and how detections and defensive controls are validated using live attack replay and an external scanner.
 
-This project reflects how modern security teams observe attacks, build detections, and prove controls work in production environments.
+This project reflects how modern security teams observe attacks, build detections, validate controls, and document outcomes in real environments.
 
-⸻
+📂 Evidence-Driven Project (No Guesswork)
 
-📂 Evidence Included (No Guesswork)
-	•	✔ Authentication log samples from real attack simulations
-	•	✔ Detection logic tied directly to observed behavior
-	•	✔ MITRE ATT&CK mappings with technique justification
-	•	✔ Before/after telemetry validating security controls
+This repository contains direct evidence, not theoretical claims:
 
-This project prioritizes evidence over theory.
+✔ Authentication telemetry from real attack simulations
 
-⸻
+✔ External scanner output validating exposed behaviors
 
-🎯 What This Project Demonstrates (At a Glance)
+✔ Detection logic tied to observed events
 
-This project mirrors the full SOC detection lifecycle:
-	•	📊 Baseline Security — Functional authentication with comprehensive logging
-	•	🚨 Vulnerability Introduction — SQL injection, weak sessions, auth bypasses
-	•	⚔️ Attack Simulation — Brute force, credential abuse, injection attacks
-	•	🔍 Telemetry Analysis — Log parsing and attack pattern identification
-	•	🗺️ MITRE ATT&CK Alignment — Observed behavior mapped for analyst triage
-	•	🛡️ Hardening & Validation — Controls applied and validated through retesting
+✔ MITRE ATT&CK mappings with justification
 
-You can’t detect what you haven’t seen — and you can’t prove defenses work without testing them.
+✔ Before/after telemetry proving control effectiveness
 
-⸻
+All conclusions are supported by artifacts in the evidence/ directory.
 
-💡 Why This Approach Matters
+🎯 What This Project Demonstrates
 
-Most security labs start with already-hardened systems.
-This project intentionally starts before security exists.
+This lab mirrors the full SOC detection lifecycle:
 
-It demonstrates how to:
-	•	✅ Recognize exploitable authentication weaknesses
-	•	✅ Read attack telemetry as it appears in logs
-	•	✅ Build detections from observed behavior, not assumptions
-	•	✅ Validate controls using before/after evidence
-	•	✅ Think like an attacker to defend effectively
+📊 Baseline Security — Observable authentication service with structured telemetry
 
-This reflects real blue-team workflows, not academic exercises.
+🚨 Vulnerability Exposure — Intentional auth weaknesses to generate signal
 
-⸻
+⚔️ Attack Simulation — Brute force, credential abuse, auth probing
 
-⭐ Flagship Detection Case (Primary Walkthrough)
+🔍 Telemetry Analysis — Log-based detection and pattern identification
 
+🗺️ MITRE ATT&CK Alignment — Observed behavior mapped for analyst triage
+
+🧪 Validation via Scanner — External scanner confirms exposure and denial behavior
+
+🛡️ Control Validation — Retesting proves measurable risk reduction
+
+You can’t detect what you haven’t seen — and you can’t prove defenses work without replaying attacks.
+
+🧪 External Scanner Integration (Key Differentiator)
+
+A custom external vulnerability scanner is included to validate the system from an attacker’s perspective.
+
+Scanner Capabilities
+
+Enumerates exposed routes
+
+Executes unauthenticated and authenticated probes
+
+Simulates brute-force and enumeration behavior
+
+Captures timing, status codes, and denial behavior
+
+Scanner Artifacts
+
+auth-tests.txt
+
+raw-events.jsonl
+
+scan-summary.json
+
+The scanner is external to the application, ensuring realistic validation without modifying backend logic.
+
+⭐ Flagship Detection Case
 Brute Force Authentication Abuse — MITRE ATT&CK T1110
 
-A full attack → detection → patch → validation walkthrough is included, featuring:
-	•	Authentication log samples showing repeated failures
-	•	Threshold-based detection logic
-	•	MITRE ATT&CK technique justification
-	•	Rate limiting and account lockout remediation
-	•	Retesting to confirm measurable risk reduction
+Included walkthrough demonstrates:
 
-Additional scenarios are summarized to demonstrate detection breadth.
+Authentication logs showing repeated failures
 
-⸻
+Threshold-based detection logic
 
-🗓️ Project Phases (SOC Workflow)
+MITRE technique justification
 
+Rate-limiting and account lockout controls
+
+Scanner-validated retest confirming reduced attack success
+
+Additional attack scenarios are summarized to demonstrate detection breadth.
+
+🧭 Project Phases (SOC Workflow)
 Phase 1 — Foundation & Telemetry
 
-📊 Establish baseline behavior
-	•	Authentication service (login, sessions, password handling)
-	•	Application, access, and system logging
-	•	Normal user behavior baselines
+📊 Establish observable baseline behavior
+
+Authentication service (login, sessions, access control)
+
+Structured application telemetry
+
+Normal user behavior baselines
 
 Deliverable: Fully observable authentication system
-
-⸻
 
 Phase 2 — Exploitation & Attack Simulation
 
 ⚔️ Generate authentic attack telemetry
-	•	SQL injection
-	•	Authentication bypass
-	•	Weak session handling
-	•	Brute force & credential abuse
 
-Mapped Techniques:
-	•	T1110 — Brute Force
-	•	T1078 — Valid Accounts
-	•	T1190 — Exploit Public-Facing Application
+Brute force & credential abuse
 
-Deliverable: Attack datasets with corresponding logs
+Authentication probing
 
-⸻
+Session handling weaknesses
+
+Mapped Techniques
+
+T1110 — Brute Force
+
+T1078 — Valid Accounts
+
+T1190 — Exploit Public-Facing Application
+
+Deliverable: Attack datasets with logs
 
 Phase 3 — Detection Engineering
 
-🔍 Build detections from telemetry
-	•	Log analysis and anomaly identification
-	•	Detection logic (SIEM / Sigma-style rules)
-	•	MITRE ATT&CK mapping for analyst alignment
-	•	Incident timelines and IOCs
+🔍 Build detections from evidence
 
-Deliverable: Detection ruleset and SOC-style documentation
+Telemetry analysis
 
-⸻
+Detection logic (SIEM / Sigma-style)
 
-Phase 4 — Security Hardening & Validation
+MITRE ATT&CK mapping
 
-🛡️ Prove controls work
-	•	Input validation & prepared statements
-	•	Session regeneration and management
-	•	Rate limiting & account lockout policies
-	•	MFA implementation
+Incident timelines and IOCs
 
-Validation Method:
-	•	Replayed attacks
-	•	Before/after telemetry comparison
-	•	Documented risk reduction
+Deliverable: SOC-style detection documentation
 
-Deliverable: Hardened system with validation report
+Phase 4 — Validation & Control Effectiveness
 
-⸻
+🛡️ Prove defenses work
 
-🧠 Analyst Considerations (Decision-Making)
-	•	Detection thresholds selected to balance sensitivity vs alert fatigue
-	•	Events grouped by source IP and time window to reduce false positives
-	•	Controls validated through replayed attacks rather than assumption
+External scanner validation
 
-These considerations reflect real SOC decision tradeoffs.
+Attack replay after controls
 
-⸻
+Before/after telemetry comparison
+
+Documented risk reduction
+
+Deliverable: Validated security posture with evidence
+
+🧠 Analyst Decision Considerations
+
+Detection thresholds balance sensitivity vs alert fatigue
+
+Events grouped by IP and time window to reduce false positives
+
+Controls validated through replayed attacks, not assumption
+
+These tradeoffs reflect real SOC decision-making.
 
 👥 Who This Project Is For
-	•	🔵 SOC Analysts — Detection engineering and threat hunting
-	•	🛡️ Blue Team Engineers — Attack-defend workflows
-	•	📚 Security Students — Full incident lifecycle exposure
-	•	📈 Detection Engineers — Real authentication telemetry patterns
-	•	🎓 Career Changers — Portfolio-ready security capability
 
-⸻
+🔵 SOC Analysts — Detection engineering & triage
+
+🛡️ Blue Team Engineers — Attack-defend workflows
+
+📚 Security Students — Full incident lifecycle exposure
+
+📈 Detection Engineers — Telemetry-driven rule development
+
+🎓 Career Changers — Portfolio-ready SOC capability
 
 📖 Skills Demonstrated
-
 Technical
-	•	Authentication log analysis
-	•	Detection rule development
-	•	MITRE ATT&CK mapping
-	•	Security control validation
-	•	Attack simulation analysis
+
+Authentication telemetry analysis
+
+Detection rule development
+
+External scanner design
+
+MITRE ATT&CK mapping
+
+Security control validation
 
 Professional
-	•	Incident documentation
-	•	Risk communication
-	•	Analyst-focused reasoning
-	•	Security decision justification
 
-⸻
+Incident documentation
+
+Risk communication
+
+Analyst-focused reasoning
+
+Evidence-based conclusions
 
 🚀 Real-World Relevance
 
 This project directly supports:
-	•	🎤 SOC Interviews — Explain detections using real evidence
-	•	💼 Detection Engineering Roles — Rule development + validation
-	•	🚨 Incident Response — Attack pattern recognition
-	•	📂 Security Portfolios — End-to-end SOC capability demonstration
+
+🎤 SOC interviews — Explain detections using real evidence
+
+💼 Detection engineering roles — Build and validate rules
+
+🚨 Incident response — Recognize auth attack patterns
+
+📂 Security portfolios — End-to-end SOC workflow
 
 Authentication attacks remain one of the most common initial access vectors in real breaches.
 
-⸻
-
 🛠️ Technologies Used
-	•	Authentication: Custom vulnerable authentication service
-	•	Logging: Application, access, and system logs
-	•	Detection: SIEM queries, Sigma-style logic
-	•	Framework: MITRE ATT&CK
-	•	Attack Simulation: Industry-standard tooling
 
-⸻
+Authentication: Custom vulnerable auth service
+
+Telemetry: Structured application logging
+
+Detection: SIEM / Sigma-style logic
+
+Validation: Custom external scanner
+
+Framework: MITRE ATT&CK
 
 ⚠️ Security Notice
 
@@ -183,6 +220,3 @@ This project contains intentional vulnerabilities for educational use only.
 ❌ Do not deploy to production
 ❌ Do not expose to untrusted networks
 ✅ Use only in isolated lab environments
-
-
-
