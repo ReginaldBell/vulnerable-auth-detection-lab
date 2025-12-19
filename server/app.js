@@ -51,9 +51,6 @@ app.use((req, res, next) => {
     result: null,
     reason: null
   };
-// Register route modules (moved outside middleware)
-app.use('/auth', authRoutes);
-app.use('/internal', internalRoutes);
 
   // Emit telemetry after status code and response are finalized
   res.on("finish", () => {
@@ -103,7 +100,7 @@ app.use('/internal', internalRoutes);
 // - Account creation
 // - Credential verification
 // - Session establishment / teardown
-app.use("/", authRoutes);
+app.use("/auth", authRoutes);
 
 // Internal routes:
 // - Session-gated resources
