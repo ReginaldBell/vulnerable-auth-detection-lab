@@ -1,4 +1,4 @@
-# MITRE ATT&CK Mapping — Phase 3
+# MITRE ATT&CK Mapping
 
 > **Purpose:** Map observed authentication vulnerabilities to MITRE ATT&CK framework techniques.  
 > **Method:** Evidence-based correlation using telemetry data from production logs.
