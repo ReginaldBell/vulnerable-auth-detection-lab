@@ -93,6 +93,18 @@ app.use((req, res, next) => {
   next();
 });
 
+
+// ============================================================================
+// Static UI Proof Layer (Phase 6)
+// ============================================================================
+app.use(express.static("public"));
+app.get("/login", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/login.html"));
+});
+app.get("/dashboard", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "../public/dashboard.html"));
+});
+
 // ============================================================================
 // Route Mounting
 // ============================================================================

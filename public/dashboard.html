@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - SecureAuth Lab</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    .msg { margin-top: 1em; color: #b00; }
+    .success { color: #080; }
+  </style>
+</head>
+<body>
+  <h2>Dashboard</h2>
+  <div id="message" class="msg"></div>
+  <script>
+    window.onload = async function() {
+      const msg = document.getElementById('message');
+      msg.textContent = '';
+      msg.className = 'msg';
+      const res = await fetch('/internal/dashboard');
+      if (res.ok) {
+        msg.textContent = 'Authenticated session active';
+        msg.className = 'msg success';
+      } else {
+        msg.textContent = 'Access denied';
+      }
+    };
+  </script>
+</body>
+</html>
