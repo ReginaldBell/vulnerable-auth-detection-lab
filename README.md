@@ -1,222 +1,186 @@
-🔐 Vulnerable Authentication Detection Lab (SecureAuth)
+# 🔐 Vulnerable Authentication Detection Lab (SecureAuth)
 
 A detection-engineering and SOC simulation lab demonstrating how authentication weaknesses generate real security telemetry — and how detections and defensive controls are validated using live attack replay and an external scanner.
 
 This project reflects how modern security teams observe attacks, build detections, validate controls, and document outcomes in real environments.
 
-📂 Evidence-Driven Project (No Guesswork)
+---
 
-This repository contains direct evidence, not theoretical claims:
+## 📂 Evidence-Driven Project (No Guesswork)
 
-✔ Authentication telemetry from real attack simulations
+This repository prioritizes evidence over theory. All claims are backed by artifacts generated during testing.
 
-✔ External scanner output validating exposed behaviors
+Included evidence:
 
-✔ Detection logic tied to observed events
+- Authentication telemetry from real attack simulations
+- External scanner output validating exposed behaviors
+- Detection logic tied directly to observed events
+- MITRE ATT&CK mappings with analyst justification
+- Before/after telemetry proving control effectiveness
 
-✔ MITRE ATT&CK mappings with justification
+Artifacts are located in the `evidence/` directory.
 
-✔ Before/after telemetry proving control effectiveness
+---
 
-All conclusions are supported by artifacts in the evidence/ directory.
-
-🎯 What This Project Demonstrates
+## 🎯 What This Project Demonstrates
 
 This lab mirrors the full SOC detection lifecycle:
 
-📊 Baseline Security — Observable authentication service with structured telemetry
+- Baseline security with structured authentication telemetry
+- Intentional vulnerability exposure to generate real signal
+- Live attack simulation (brute force, credential abuse, auth probing)
+- Telemetry analysis and detection engineering
+- MITRE ATT&CK alignment for analyst triage
+- External scanner validation from an attacker's perspective
+- Control validation through replayed attacks
 
-🚨 Vulnerability Exposure — Intentional auth weaknesses to generate signal
+You can't detect what you haven't seen — and you can't prove defenses work without testing them.
 
-⚔️ Attack Simulation — Brute force, credential abuse, auth probing
+---
 
-🔍 Telemetry Analysis — Log-based detection and pattern identification
+## 🧪 External Scanner Integration (Key Differentiator)
 
-🗺️ MITRE ATT&CK Alignment — Observed behavior mapped for analyst triage
+A custom external vulnerability scanner is included to validate the system without modifying backend logic.
 
-🧪 Validation via Scanner — External scanner confirms exposure and denial behavior
+Scanner capabilities:
 
-🛡️ Control Validation — Retesting proves measurable risk reduction
+- Enumerates exposed routes
+- Executes unauthenticated and authenticated probes
+- Simulates brute-force and enumeration behavior
+- Captures status codes, timing, and denial behavior
 
-You can’t detect what you haven’t seen — and you can’t prove defenses work without replaying attacks.
+Scanner artifacts:
 
-🧪 External Scanner Integration (Key Differentiator)
+- `auth-tests.txt`
+- `raw-events.jsonl`
+- `scan-summary.json`
 
-A custom external vulnerability scanner is included to validate the system from an attacker’s perspective.
+The scanner runs outside the application, ensuring realistic attacker-side validation.
 
-Scanner Capabilities
+---
 
-Enumerates exposed routes
+## ⭐ Flagship Detection Case
 
-Executes unauthenticated and authenticated probes
+**Brute Force Authentication Abuse — MITRE ATT&CK T1110**
 
-Simulates brute-force and enumeration behavior
+The primary walkthrough demonstrates:
 
-Captures timing, status codes, and denial behavior
-
-Scanner Artifacts
-
-auth-tests.txt
-
-raw-events.jsonl
-
-scan-summary.json
-
-The scanner is external to the application, ensuring realistic validation without modifying backend logic.
-
-⭐ Flagship Detection Case
-Brute Force Authentication Abuse — MITRE ATT&CK T1110
-
-Included walkthrough demonstrates:
-
-Authentication logs showing repeated failures
-
-Threshold-based detection logic
-
-MITRE technique justification
-
-Rate-limiting and account lockout controls
-
-Scanner-validated retest confirming reduced attack success
+- Repeated authentication failures captured in telemetry
+- Threshold-based detection logic
+- MITRE ATT&CK technique justification
+- Control validation via scanner retest
+- Measurable reduction in attack success
 
 Additional attack scenarios are summarized to demonstrate detection breadth.
 
-🧭 Project Phases (SOC Workflow)
-Phase 1 — Foundation & Telemetry
+---
 
-📊 Establish observable baseline behavior
+## 🧭 Project Phases (SOC Workflow)
 
-Authentication service (login, sessions, access control)
+### Phase 1 — Foundation & Telemetry
 
-Structured application telemetry
+- Observable authentication service
+- Structured logging and baseline behavior
 
-Normal user behavior baselines
+**Deliverable:** Fully observable authentication system
 
-Deliverable: Fully observable authentication system
+### Phase 2 — Exploitation & Attack Simulation
 
-Phase 2 — Exploitation & Attack Simulation
+- Brute force and credential abuse
+- Authentication probing
 
-⚔️ Generate authentic attack telemetry
+Mapped techniques:
 
-Brute force & credential abuse
+- T1110 — Brute Force
+- T1078 — Valid Accounts
+- T1190 — Exploit Public-Facing Application
 
-Authentication probing
+**Deliverable:** Attack datasets with corresponding logs
 
-Session handling weaknesses
+### Phase 3 — Detection Engineering
 
-Mapped Techniques
+- Telemetry analysis
+- Detection logic (SIEM / Sigma-style)
+- MITRE ATT&CK mapping
+- Incident documentation
 
-T1110 — Brute Force
+**Deliverable:** SOC-style detection documentation
 
-T1078 — Valid Accounts
+### Phase 4 — Validation & Control Effectiveness
 
-T1190 — Exploit Public-Facing Application
+- External scanner validation
+- Attack replay after controls
+- Before/after telemetry comparison
 
-Deliverable: Attack datasets with logs
+**Deliverable:** Evidence-backed validation report
 
-Phase 3 — Detection Engineering
+---
 
-🔍 Build detections from evidence
+## 🧠 Analyst Decision Considerations
 
-Telemetry analysis
-
-Detection logic (SIEM / Sigma-style)
-
-MITRE ATT&CK mapping
-
-Incident timelines and IOCs
-
-Deliverable: SOC-style detection documentation
-
-Phase 4 — Validation & Control Effectiveness
-
-🛡️ Prove defenses work
-
-External scanner validation
-
-Attack replay after controls
-
-Before/after telemetry comparison
-
-Documented risk reduction
-
-Deliverable: Validated security posture with evidence
-
-🧠 Analyst Decision Considerations
-
-Detection thresholds balance sensitivity vs alert fatigue
-
-Events grouped by IP and time window to reduce false positives
-
-Controls validated through replayed attacks, not assumption
+- Detection thresholds selected to balance sensitivity vs alert fatigue
+- Events grouped by source IP and time window to reduce false positives
+- Controls validated through replayed attacks, not assumption
 
 These tradeoffs reflect real SOC decision-making.
 
-👥 Who This Project Is For
+---
 
-🔵 SOC Analysts — Detection engineering & triage
+## 👥 Who This Project Is For
 
-🛡️ Blue Team Engineers — Attack-defend workflows
+- **SOC Analysts** — detection engineering and triage
+- **Blue Team Engineers** — attack-defend workflows
+- **Security Students** — full incident lifecycle exposure
+- **Detection Engineers** — telemetry-driven rule development
+- **Career Changers** — portfolio-ready SOC capability
 
-📚 Security Students — Full incident lifecycle exposure
+---
 
-📈 Detection Engineers — Telemetry-driven rule development
+## 📖 Skills Demonstrated
 
-🎓 Career Changers — Portfolio-ready SOC capability
+### Technical
 
-📖 Skills Demonstrated
-Technical
+- Authentication telemetry analysis
+- Detection rule development
+- External scanner design
+- MITRE ATT&CK mapping
+- Security control validation
 
-Authentication telemetry analysis
+### Professional
 
-Detection rule development
+- Incident documentation
+- Risk communication
+- Evidence-based conclusions
 
-External scanner design
+---
 
-MITRE ATT&CK mapping
-
-Security control validation
-
-Professional
-
-Incident documentation
-
-Risk communication
-
-Analyst-focused reasoning
-
-Evidence-based conclusions
-
-🚀 Real-World Relevance
+## 🚀 Real-World Relevance
 
 This project directly supports:
 
-🎤 SOC interviews — Explain detections using real evidence
+- SOC analyst interviews
+- Detection engineering roles
+- Incident response discussions
+- Security portfolio reviews
 
-💼 Detection engineering roles — Build and validate rules
+Authentication abuse remains one of the most common initial access vectors in real breaches.
 
-🚨 Incident response — Recognize auth attack patterns
+---
 
-📂 Security portfolios — End-to-end SOC workflow
+## 🛠️ Technologies Used
 
-Authentication attacks remain one of the most common initial access vectors in real breaches.
+- Custom vulnerable authentication service
+- Structured application telemetry
+- Detection logic (SIEM / Sigma-style)
+- External validation scanner
+- MITRE ATT&CK framework
 
-🛠️ Technologies Used
+---
 
-Authentication: Custom vulnerable auth service
-
-Telemetry: Structured application logging
-
-Detection: SIEM / Sigma-style logic
-
-Validation: Custom external scanner
-
-Framework: MITRE ATT&CK
-
-⚠️ Security Notice
+## ⚠️ Security Notice
 
 This project contains intentional vulnerabilities for educational use only.
 
-❌ Do not deploy to production
-❌ Do not expose to untrusted networks
-✅ Use only in isolated lab environments
+- Do not deploy to production
+- Do not expose to untrusted networks
+- Use only in isolated lab environments
